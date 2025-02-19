@@ -105,6 +105,8 @@ public class MonsterIcon : BaseIcon
                         if (!isMonsterWithIcon)
                             MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeWhiteHexagon);
                         MainTexture.Color = Color.DarkOrange;
+                        if (settings.MonsterRarityNames.ShowUniqueNames)
+                            Text = RenderName.Split(',').FirstOrDefault();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(

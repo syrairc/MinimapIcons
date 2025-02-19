@@ -23,6 +23,7 @@ public class IconsBuilderSettings
     public ToggleNode HideMinions { get; set; } = new ToggleNode(false);
     public ToggleNode DeliriumText { get; set; } = new ToggleNode(false);
     public ToggleNode HideBurriedMonsters { get; set; } = new ToggleNode(false);
+    public MonsterNameSettings MonsterRarityNames { get; set; } = new MonsterNameSettings();
     public ToggleNode UseReplacementsForGameIconsWhenOutOfRange { get; set; } = new ToggleNode(true);
     public ToggleNode UseReplacementsForItemIconsWhenOutOfRange { get; set; } = new ToggleNode(true);
 
@@ -88,6 +89,15 @@ public class IconsBuilderSettings
         };
 
     public ContentNode<CustomIconSettings> CustomIcons { get; set; } = new ContentNode<CustomIconSettings> { ItemFactory = () => new CustomIconSettings(), };
+}
+
+[Submenu(CollapsedByDefault = false)]
+public class MonsterNameSettings
+{
+    public ToggleNode ShowNormalNames { get; set; } = new ToggleNode(false);
+    public ToggleNode ShowMagicNames { get; set; } = new ToggleNode(false);
+    public ToggleNode ShowRareNames { get; set; } = new ToggleNode(false);
+    public ToggleNode ShowUniqueNames { get; set; } = new ToggleNode(true);
 }
 
 [Submenu]
