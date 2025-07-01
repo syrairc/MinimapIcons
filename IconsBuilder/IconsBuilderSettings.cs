@@ -84,6 +84,7 @@ public class CustomIconSettings
     public TextNode MetadataRegex { get; set; } = new("^$");
     public ColorNode Tint { get; set; } = new(Color.White);
     public RangeNode<float> Size { get; set; } = new(5, 1, 60);
+    public ToggleNode OnlyShowAlive { get; set; } = new(false);
     [JsonConverter(typeof(StringEnumConverter))]
     public MapIconsIndex Icon;
 
