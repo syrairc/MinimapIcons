@@ -35,10 +35,10 @@ public class MonsterIcon : BaseIcon
             MonsterRarity.Magic => settings.SizeEntityMagicIcon,
             MonsterRarity.Rare => settings.SizeEntityRareIcon,
             MonsterRarity.Unique => settings.SizeEntityUniqueIcon,
-            _ => throw new ArgumentException($"{nameof(MonsterIcon)} wrong rarity for {entity.Path}. Dump: {entity.GetComponent<ObjectMagicProperties>().DumpObject()}")
+            _ => throw new ArgumentException($"{nameof(MonsterIcon)} wrong rarity for {entity.Path}. Dump: {entity.GetComponent<ObjectMagicProperties>()?.DumpObject()}")
         };
 
-        if (_HasIngameIcon && entity.HasComponent<MinimapIcon>() && !entity.GetComponent<MinimapIcon>().Name.Equals("NPC"))
+        if (_HasIngameIcon && entity.TryGetComponent<MinimapIcon>(out var mI) && mI.Name != "NPC")
             return;
 
         if (!entity.IsHostile)
@@ -49,27 +49,20 @@ public class MonsterIcon : BaseIcon
                 Priority = IconPriority.Low;
                 Show = () => !settings.HideMinions && entity.IsAlive;
             }
-
-            //Spirits icon
         }
         else if (Rarity == MonsterRarity.Unique && entity.Path.Contains("Metadata/Monsters/Spirit/"))
             MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeGreenHexagon);
         else
         {
             string modName = null;
+            var objectMagicProperties = entity.GetComponent<ObjectMagicProperties>();
+            var mods = objectMagicProperties?.Mods;
 
-            if (entity.HasComponent<ObjectMagicProperties>())
+            if (mods != null)
             {
-                var objectMagicProperties = entity.GetComponent<ObjectMagicProperties>();
+                if (mods.Contains("MonsterConvertsOnDeath_")) Show = () => entity.IsAlive && entity.IsHostile;
 
-                var mods = objectMagicProperties.Mods;
-
-                if (mods != null)
-                {
-                    if (mods.Contains("MonsterConvertsOnDeath_")) Show = () => entity.IsAlive && entity.IsHostile;
-
-                    modName = mods.FirstOrDefault(modIcons.ContainsKey);
-                }
+                modName = mods.FirstOrDefault(modIcons.ContainsKey);
             }
 
             if (modName != null)
@@ -98,7 +91,7 @@ public class MonsterIcon : BaseIcon
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(
-                            $"Rarity wrong was is {Rarity}. {entity.GetComponent<ObjectMagicProperties>().DumpObject()}");
+                            $"Rarity wrong was is {Rarity}. {objectMagicProperties?.DumpObject()}");
                 }
             }
         }
