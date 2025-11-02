@@ -10,7 +10,8 @@ public class CustomIcon : BaseIcon
     public CustomIcon(Entity entity, IconsBuilderSettings settings, CustomIconSettings customIconSettings)
         : base(entity)
     {
-        Show = () => !customIconSettings.OnlyShowAlive || entity.IsAlive;
+        Show = () => (!customIconSettings.OnlyShowAlive || entity.IsAlive) &&
+                     (!customIconSettings.OnlyShowNotOpened || !entity.IsOpened);
         MainTexture = new HudTexture("Icons.png")
         {
             UV = SpriteHelper.GetUV(customIconSettings.Icon),
