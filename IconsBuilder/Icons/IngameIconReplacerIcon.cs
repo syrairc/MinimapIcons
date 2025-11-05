@@ -27,24 +27,32 @@ public class IngameItemReplacerIcon : BaseIcon
 
 public class IngameIconReplacerIcon : BaseIcon
 {
+    private bool _isHidden;
+    private int _transitionableFlag1;
+    private bool _shrineIsAvailable;
+    private bool _isOpened;
+    private bool _isIgnoreHidden;
+
     public IngameIconReplacerIcon(Entity entity, IconsBuilderSettings settings, MapIconsSettings mapIconsSettings)
         : base(entity)
     {
-        var isHidden = false;
-        var transitionableFlag1 = 1;
-        var shrineIsAvailable = true;
-        var isOpened = false;
+        _isHidden = false;
+        _transitionableFlag1 = 1;
+        _shrineIsAvailable = true;
+        _isOpened = false;
+        _isIgnoreHidden = mapIconsSettings.IgnoreHiddenStatusMinimapIcons.Content.Any(x => IconsBuilder.GetRegex(x.Value).IsMatch(entity.Path));
 
         T Update<T>(ref T store, Func<T> update)
         {
             return entity.IsValid ? store = update() : store;
         }
 
-        Show = () => !Update(ref isHidden, () => entity.GetComponent<MinimapIcon>()?.IsHide ?? isHidden) &&
-                     Update(ref transitionableFlag1, () => entity.GetComponent<Transitionable>()?.Flag1 ?? 1) == 1 &&
-                     Update(ref shrineIsAvailable, () => entity.GetComponent<Shrine>()?.IsAvailable ?? shrineIsAvailable) &&
-                     !Update(ref isOpened, () => entity.GetComponent<Chest>()?.IsOpened ?? isOpened) &&
-                     (!entity.IsValid || mapIconsSettings.AlwaysShownIngameIcons.Content.Any(x => x.Value.Equals(entity.Path)));
+        Show = () => !Update(ref _isHidden, () => !_isIgnoreHidden &&
+                                                  (entity.GetComponent<MinimapIcon>()?.IsHide ?? _isHidden)) &&
+                     Update(ref _transitionableFlag1, () => _isIgnoreHidden ? 1 : entity.GetComponent<Transitionable>()?.Flag1 ?? 1) == 1 &&
+                     Update(ref _shrineIsAvailable, () => entity.GetComponent<Shrine>()?.IsAvailable ?? _shrineIsAvailable) &&
+                     !Update(ref _isOpened, () => entity.GetComponent<Chest>()?.IsOpened ?? _isOpened) &&
+                     (!entity.IsValid || mapIconsSettings.AlwaysShownIngameIcons.Content.Any(x => IconsBuilder.GetRegex(x.Value).IsMatch(entity.Path)));
         var name = entity.GetComponent<MinimapIcon>()?.Name ?? "";
         var iconIndexByName = ExileCore2.Shared.Helpers.Extensions.IconIndexByName(name);
 

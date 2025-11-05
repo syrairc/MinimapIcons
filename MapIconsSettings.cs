@@ -34,5 +34,17 @@ public class MapIconsSettings : ISettings
             UseFlatItems = true,
         };
 
+    [Menu(null, CollapsedByDefault = true)]
+    public ContentNode<TextNode> IgnoreHiddenStatusMinimapIcons { get; set; } =
+        new ContentNode<TextNode>()
+        {
+            Content =
+            [
+            ],
+            EnableControls = true, 
+            ItemFactory = () => new TextNode(""),
+            UseFlatItems = true,
+        };
+
     public IconsBuilderSettings IconsBuilderSettings { get; set; } = new();
 }

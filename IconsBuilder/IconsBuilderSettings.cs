@@ -75,6 +75,18 @@ public class IconsBuilderSettings
     [JsonIgnore]
     public ButtonNode ResetIcons { get; set; } = new();
 
+    [Menu(null, CollapsedByDefault = true)]
+    public ContentNode<TextNode> MonstersWithIcons { get; set; } =
+        new ContentNode<TextNode>()
+        {
+            Content =
+            [
+            ],
+            EnableControls = true,
+            ItemFactory = () => new TextNode(""),
+            UseFlatItems = true,
+        };
+
     public ContentNode<CustomIconSettings> CustomIcons { get; set; } = new ContentNode<CustomIconSettings> { ItemFactory = () => new CustomIconSettings(), };
 }
 
@@ -86,6 +98,7 @@ public class CustomIconSettings
     public RangeNode<float> Size { get; set; } = new(5, 1, 60);
     public ToggleNode OnlyShowAlive { get; set; } = new(false);
     public ToggleNode OnlyShowNotOpened { get; set; } = new(false);
+    public ToggleNode OnlyShowNonHiddenIcons { get; set; } = new(false);
     [JsonConverter(typeof(StringEnumConverter))]
     public MapIconsIndex Icon;
 

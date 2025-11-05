@@ -38,9 +38,17 @@ public class MonsterIcon : BaseIcon
             _ => throw new ArgumentException($"{nameof(MonsterIcon)} wrong rarity for {entity.Path}. Dump: {entity.GetComponent<ObjectMagicProperties>()?.DumpObject()}")
         };
 
-        if (_HasIngameIcon && entity.TryGetComponent<MinimapIcon>(out var mI) && mI.Name != "NPC")
-            return;
+        var isMonsterWithIcon = settings.MonstersWithIcons.Content.Any(x => IconsBuilder.GetRegex(x.Value).IsMatch(entity.Path));
+        if (isMonsterWithIcon && IngameIconIndex == MapIconsIndex.BlightMonster)
+        {
+            MainTexture.Size *= 2;
+        }
 
+        if (_HasIngameIcon && 
+            entity.TryGetComponent<MinimapIcon>(out var mI) && 
+            mI.Name != "NPC" &&
+            !isMonsterWithIcon)
+            return;
         if (!entity.IsHostile)
         {
             if (!_HasIngameIcon)
@@ -76,17 +84,26 @@ public class MonsterIcon : BaseIcon
                 switch (Rarity)
                 {
                     case MonsterRarity.White:
-                        MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeRedCircle);
+                        if (!isMonsterWithIcon)
+                            MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeRedCircle);
+                        if (settings.MonsterRarityNames.ShowNormalNames)
+                            Text = RenderName.Split(',').FirstOrDefault();
                         break;
                     case MonsterRarity.Magic:
-                        MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeBlueCircle);
-
+                        if (!isMonsterWithIcon)
+                            MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeBlueCircle);
+                        if (settings.MonsterRarityNames.ShowMagicNames)
+                            Text = RenderName.Split(',').FirstOrDefault();
                         break;
                     case MonsterRarity.Rare:
-                        MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeYellowCircle);
+                        if (!isMonsterWithIcon)
+                            MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeYellowCircle);
+                        if (settings.MonsterRarityNames.ShowRareNames)
+                            Text = RenderName.Split(',').FirstOrDefault();
                         break;
                     case MonsterRarity.Unique:
-                        MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeWhiteHexagon);
+                        if (!isMonsterWithIcon)
+                            MainTexture.UV = SpriteHelper.GetUV(MapIconsIndex.LootFilterLargeWhiteHexagon);
                         MainTexture.Color = Color.DarkOrange;
                         break;
                     default:
