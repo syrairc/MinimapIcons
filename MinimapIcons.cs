@@ -138,13 +138,18 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
                 continue;
 
             Graphics.DrawImage(iconValueMainTexture.FileName, drawRect, iconValueMainTexture.UV, iconValueMainTexture.Color);
-            if (icon.Hidden())
+            if (icon.BorderColor is { } borderColor)
             {
-                var s = drawRect.Width * 0.5f;
+                Graphics.DrawFrame(drawRect, borderColor, 1);
+            }
+
+            if (Settings.HighlightHiddenMonsters && icon.Hidden())
+            {
+                var s = drawRect.Width * 0.1f;
                 drawRect.Inflate(-s, -s);
 
-                Graphics.DrawImage(icon.MainTexture.FileName, drawRect,
-                    SpriteHelper.GetUV(MapIconsIndex.LootFilterSmallCyanCircle), Color.White);
+                Graphics.DrawImage("Icons.png", drawRect,
+                    SpriteHelper.GetUV(MapIconsIndex.LootFilterSmallWhiteCircle), Color.White);
 
                 drawRect.Inflate(s, s);
             }
