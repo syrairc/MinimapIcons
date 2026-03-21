@@ -17,6 +17,10 @@ public class CustomIcon : BaseIcon
                      (!customIconSettings.OnlyShowNotOpened || !entity.IsOpened)&&
                      (!customIconSettings.OnlyShowNonHiddenIcons || !IsHiddenCached)
                      ;
+
+        if (customIconSettings.DisableDrawingHiddenIcon)
+            Hidden = () => false;
+            
         MainTexture = new HudTexture("Icons.png")
         {
             UV = SpriteHelper.GetUV(customIconSettings.Icon),

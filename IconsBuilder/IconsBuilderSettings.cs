@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Numerics;
 using ExileCore2;
 using ExileCore2.Shared.Attributes;
@@ -112,6 +112,7 @@ public class CustomIconSettings
     public ToggleNode OnlyShowAlive { get; set; } = new(false);
     public ToggleNode OnlyShowNotOpened { get; set; } = new(false);
     public ToggleNode OnlyShowNonHiddenIcons { get; set; } = new(false);
+    public ToggleNode DisableDrawingHiddenIcon { get; set; } = new(false);
     [JsonConverter(typeof(StringEnumConverter))]
     public MapIconsIndex Icon;
 
