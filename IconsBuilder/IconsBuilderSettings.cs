@@ -76,6 +76,9 @@ public class IconsBuilderSettings
     [Menu("Shrine icon size")]
     public RangeNode<int> SizeShrineIcon { get; set; } = new RangeNode<int>(10, 1, 50);
 
+    public ToggleNode ShowNormalMonsters { get; set; } = new ToggleNode(true);
+    public ToggleNode ShowMagicMonsters { get; set; } = new ToggleNode(true);
+
     [JsonIgnore]
     public ButtonNode ResetIcons { get; set; } = new();
 
