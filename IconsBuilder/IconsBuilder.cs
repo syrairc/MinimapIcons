@@ -15,6 +15,7 @@ namespace MinimapIcons.IconsBuilder;
 
 public class IconsBuilder
 {
+    private const string BreachMonsterPathPrefix = "Metadata/Monsters/Breach/Monsters/";
     private readonly MinimapIcons _plugin;
 
     public IconsBuilder(MinimapIcons plugin)
@@ -156,10 +157,11 @@ public class IconsBuilder
             }
         }
 
+        var path = entity.Path ?? string.Empty;
         if (Settings.UseReplacementsForGameIconsWhenOutOfRange &&
             entity.TryGetComponent<MinimapIcon>(out var minimapIconComponent) &&
-            (!minimapIconComponent.IsHide || _plugin.Settings.IgnoreHiddenStatusMinimapIcons.Content.Any(x => GetRegex(x.Value).IsMatch(entity.Path))) && 
-            !Settings.MonstersWithIcons.Content.Any(x => GetRegex(x.Value).IsMatch(entity.Path)))
+            (!minimapIconComponent.IsHide || _plugin.Settings.IgnoreHiddenStatusMinimapIcons.Content.Any(x => GetRegex(x.Value).IsMatch(path))) &&
+            !ShouldTreatAsMonsterWithIcon(path, Settings))
         {
             var name = minimapIconComponent.Name;
             if (!string.IsNullOrEmpty(name))
@@ -227,5 +229,16 @@ public class IconsBuilder
     public static Regex GetRegex(string regex)
     {
         return _regexes.GetValue(regex, p => new Regex(p));
+    }
+
+    public static bool ShouldTreatAsMonsterWithIcon(Entity entity, IconsBuilderSettings settings)
+    {
+        return ShouldTreatAsMonsterWithIcon(entity.Path ?? string.Empty, settings);
+    }
+
+    public static bool ShouldTreatAsMonsterWithIcon(string path, IconsBuilderSettings settings)
+    {
+        return path.StartsWith(BreachMonsterPathPrefix, StringComparison.Ordinal) ||
+               settings.MonstersWithIcons.Content.Any(x => GetRegex(x.Value).IsMatch(path));
     }
 }
