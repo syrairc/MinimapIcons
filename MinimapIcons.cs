@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ExileCore2;
@@ -10,6 +11,7 @@ using ExileCore2.PoEMemory.MemoryObjects;
 using ExileCore2.Shared.Cache;
 using ExileCore2.Shared.Enums;
 using ExileCore2.Shared.Helpers;
+using MinimapIcons.IconsBuilder;
 using MinimapIcons.IconsBuilder.Icons;
 using RectangleF = ExileCore2.Shared.RectangleF;
 using Vector2 = System.Numerics.Vector2;
@@ -30,9 +32,11 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
     public override bool Initialise()
     {
         IconsBuilder.Initialise();
+        Settings.IconCustomization.EnsureAllKeys();
         Settings.AlwaysShownIngameIcons.Content = Settings.AlwaysShownIngameIcons.Content.DistinctBy(x => x.Value).ToList();
         Graphics.InitImage("sprites.png");
         Graphics.InitImage("Icons.png");
+        LoadCustomIconAtlases();
         CanUseMultiThreading = true;
         _iconListCache = CreateIconListCache();
         Settings.IconListRefreshPeriod.OnValueChanged += (_, _) => _iconListCache = CreateIconListCache();
@@ -42,6 +46,36 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
     public override void AreaChange(AreaInstance area)
     {
         IconsBuilder.AreaChange(area);
+    }
+
+    // Registers the custom higher-res icon atlases (geometric + detailed art) shipped in
+    // IconsBuilder/textures and caches their ImGui texture ids for the Icon Customization picker.
+    private void LoadCustomIconAtlases()
+    {
+        try
+        {
+            var dir = Path.Combine(DirectoryFullName, "IconsBuilder", "textures");
+            var geoPath = Path.Combine(dir, SpriteAtlas.FileName);
+            var artPath = Path.Combine(dir, ArtAtlas.FileName);
+
+            if (File.Exists(geoPath))
+            {
+                Graphics.InitImage(SpriteAtlas.FileName, geoPath);
+                IconCustomizationSettings.GeoTextureId = Graphics.GetTextureId(SpriteAtlas.FileName);
+            }
+            else LogError($"MinimapIcons -> Geo icon atlas missing: {geoPath}");
+
+            if (File.Exists(artPath))
+            {
+                Graphics.InitImage(ArtAtlas.FileName, artPath);
+                IconCustomizationSettings.ArtTextureId = Graphics.GetTextureId(ArtAtlas.FileName);
+            }
+            else LogError($"MinimapIcons -> Art icon atlas missing: {artPath}");
+        }
+        catch (Exception ex)
+        {
+            LogError($"MinimapIcons -> Failed to load custom icon atlases: {ex}");
+        }
     }
 
     private TimeCache<List<BaseIcon>> CreateIconListCache()
@@ -116,10 +150,21 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
             if (!Settings.DrawMonsters && icon.Entity.Type == EntityType.Monster)
                 continue;
 
-            if (!icon.Show())
+            // Per-type override for this icon (sprite/size/tint via Customize, force-draw via AlwaysDraw).
+            IconTypeOverride ov = null;
+            if (IconCustomizationSettings.ResolveIconType(icon) is { } iconType)
+                Settings.IconCustomization.Overrides.TryGetValue(iconType, out ov);
+
+            // AlwaysDraw forces the plugin to draw this type despite a native game minimap icon. For
+            // replacer icons, Show() itself encodes the "defer while in range" suppression, so bypass it;
+            // for real icon classes Show() encodes genuine visibility (alive/available), so keep it.
+            var alwaysDraw = ov is { AlwaysDraw.Value: true } && icon.Entity.IsValid;
+            var isReplacer = icon is IngameIconReplacerIcon or IngameItemReplacerIcon;
+
+            if (!(alwaysDraw && isReplacer) && !icon.Show())
                 continue;
 
-            if (ShouldSkipIngameIcon(icon))
+            if (!alwaysDraw && ShouldSkipIngameIcon(icon))
                 continue;
 
             var iconGridPos = icon.GridPosition();
@@ -128,14 +173,26 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
                                (playerHeight + GameController.IngameState.Data.GetTerrainHeightAt(iconGridPos)) * PoeMapExtension.WorldToGridConversion);
 
             var iconValueMainTexture = icon.MainTexture;
+            // Effective draw values: a per-type override (if its Customize toggle is on) fully replaces
+            // sprite/size/tint at render time. MainTexture is left pristine so edits are live.
+            var fileName = iconValueMainTexture.FileName;
+            var uv = iconValueMainTexture.UV;
             var size = iconValueMainTexture.Size;
+            var color = iconValueMainTexture.Color;
+            if (ov is { Customize.Value: true })
+            {
+                (fileName, uv) = ov.ResolveSprite();
+                size = ov.Size.Value;
+                color = ov.Tint.Value;
+            }
+
             var halfSize = size / 2f;
             icon.DrawRect = new RectangleF(position.X - halfSize, position.Y - halfSize, size, size);
             var drawRect = icon.DrawRect;
-            if (_largeMap == false && !_ingameUi.Map.SmallMiniMap.GetClientRectCache.Contains(drawRect)) 
+            if (_largeMap == false && !_ingameUi.Map.SmallMiniMap.GetClientRectCache.Contains(drawRect))
                 continue;
 
-            Graphics.DrawImage(iconValueMainTexture.FileName, drawRect, iconValueMainTexture.UV, iconValueMainTexture.Color);
+            Graphics.DrawImage(fileName, drawRect, uv, color);
             if (icon.BorderColor is { } borderColor)
             {
                 Graphics.DrawFrame(drawRect, borderColor, 1);

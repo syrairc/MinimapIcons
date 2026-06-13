@@ -46,4 +46,7 @@ public class MapIconsSettings : ISettings
         };
 
     public IconsBuilderSettings IconsBuilderSettings { get; set; } = new();
+
+    [Menu("Icon Customization", "Override the icon sprite, size, and tint per entity/icon type")]
+    public IconCustomizationSettings IconCustomization { get; set; } = new();
 }

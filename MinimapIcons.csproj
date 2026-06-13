@@ -9,6 +9,10 @@
     <Content Include="config\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Remove="IconsBuilder\textures\**" />
+    <Content Include="IconsBuilder\textures\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ExileCore2">
