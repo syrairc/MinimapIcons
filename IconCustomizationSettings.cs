@@ -48,6 +48,7 @@ public enum IconType
     Shrine,
     MissionMarker,
     Misc,
+    Ritual,
     ChestBreach,
     ChestStrongbox,
     ChestExpedition,
@@ -140,7 +141,7 @@ public class IconCustomizationSettings
     /// </summary>
     private static Dictionary<IconType, IconTypeOverride> BuildDefaults()
     {
-        return new Dictionary<IconType, IconTypeOverride>
+        var defaults = new Dictionary<IconType, IconTypeOverride>
         {
             [IconType.MonsterWhite]    = new(MapIconsIndex.LootFilterLargeRedCircle, 10, Color.White),
             [IconType.MonsterMagic]    = new(MapIconsIndex.LootFilterLargeBlueCircle, 10, Color.White),
@@ -152,12 +153,18 @@ public class IconCustomizationSettings
             [IconType.Shrine]          = new(MapIconsIndex.Shrine, 10, Color.White),
             [IconType.MissionMarker]   = new(MapIconsIndex.QuestObject, 10, Color.White),
             [IconType.Misc]            = new(MapIconsIndex.QuestObject, 10, Color.White),
+            [IconType.Ritual]          = new(MapIconsIndex.QuestObject, 12, Color.OrangeRed),
             [IconType.ChestBreach]     = new(MapIconsIndex.RewardChestGeneric, 10, Color.White),
             [IconType.ChestStrongbox]  = new(MapIconsIndex.RewardChestGeneric, 10, Color.White),
             [IconType.ChestExpedition] = new(MapIconsIndex.ExpeditionChest2, 30, Color.White),
             [IconType.ChestSanctum]    = new(MapIconsIndex.HeistPathChest, 30, Color.White),
             [IconType.ChestSmall]      = new(MapIconsIndex.LootFilterSmallCyanSquare, 10, Color.White),
         };
+
+        // Ritual rune objects carry a native minimap icon that the game defers while in range; force-draw
+        // it by default so the rune stays visible (the deferral is the usual "ritual isn't showing" cause).
+        defaults[IconType.Ritual].AlwaysDraw.Value = true;
+        return defaults;
     }
 
     /// <summary>
@@ -183,6 +190,11 @@ public class IconCustomizationSettings
     /// </summary>
     public static IconType? ResolveIconType(BaseIcon icon)
     {
+        // Ritual rune objects are terrain entities caught by the replacer/Misc paths; classify by path so
+        // the override (incl. AlwaysDraw) targets them regardless of which icon class they built as.
+        if (icon is not CustomIcon && IsRitualEntity(icon.Entity))
+            return IconType.Ritual;
+
         switch (icon)
         {
             case CustomIcon:
@@ -217,6 +229,9 @@ public class IconCustomizationSettings
                 return null;
         }
     }
+
+    private static bool IsRitualEntity(Entity e) =>
+        e?.Path?.Contains("Metadata/Terrain/Leagues/Ritual/RitualRuneObject") == true;
 
     private static IconType RarityToType(MonsterRarity rarity) => rarity switch
     {
@@ -265,6 +280,7 @@ public class IconCustomizationSettings
         (IconType.Shrine, "Shrine"),
         (IconType.MissionMarker, "Mission Marker"),
         (IconType.Misc, "Misc"),
+        (IconType.Ritual, "Ritual"),
         (null, "Chests"),
         (IconType.ChestBreach, "Chest: Breach"),
         (IconType.ChestStrongbox, "Chest: Strongbox"),
