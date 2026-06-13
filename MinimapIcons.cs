@@ -122,9 +122,9 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
 
     public override void Render()
     {
-        if (_largeMap == null || 
+        if (_largeMap == null ||
             !GameController.InGame ||
-            Settings.DrawOnlyOnLargeMap && _largeMap != true) 
+            Settings.DrawOnlyOnLargeMap && _largeMap != true)
             return;
 
         if (!Settings.IgnoreFullscreenPanels &&
@@ -209,8 +209,12 @@ public class MinimapIcons : BaseSettingsPlugin<MapIconsSettings>
                 drawRect.Inflate(s, s);
             }
 
-            if (!string.IsNullOrEmpty(icon.Text))
-                Graphics.DrawText(icon.Text, position.Translate(0, Settings.ZForText), FontAlign.Center);
+            // Per-type "Show Name" replaces the label with the entity's render name.
+            var text = ov is { ShowName.Value: true }
+                ? icon.Entity.RenderName?.Split(',')[0]
+                : icon.Text;
+            if (!string.IsNullOrEmpty(text))
+                Graphics.DrawText(text, position.Translate(0, Settings.ZForText), FontAlign.Center);
         }
     }
 

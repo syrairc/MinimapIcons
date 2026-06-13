@@ -69,6 +69,10 @@ public class IconTypeOverride
     // icon (bypasses the native-icon deferral, and the replacer's "defer while in range" Show()).
     public ToggleNode AlwaysDraw { get; set; } = new ToggleNode(false);
 
+    // When on, draws the entity's render name as the icon label (overriding whatever text the icon
+    // class set, if any).
+    public ToggleNode ShowName { get; set; } = new ToggleNode(false);
+
     [JsonConverter(typeof(StringEnumConverter))]
     public IconSource Source = IconSource.GameIcons;
 
@@ -275,19 +279,21 @@ public class IconCustomizationSettings
 
         ImGui.TextWrapped("'Always Draw' forces this type to be drawn by the plugin even when the game " +
                           "already has a native minimap icon for it (use this if e.g. shrines aren't " +
-                          "showing). 'Customize' fully replaces the type's icon, size, and tint — the " +
+                          "showing). 'Show Name' labels the icon with the entity's name. 'Customize' " +
+                          "fully replaces the type's icon, size, and tint — the " +
                           "picker offers three sources: Game (Icons.png), Geo (geometric), and Art " +
                           "(detailed); greyscale Geo/Art take your tint via multiply. Changes apply live. " +
                           "Note: a custom monster icon also replaces mod-alert (danger) sprites for that " +
                           "rarity.");
         ImGui.Separator();
 
-        if (!ImGui.BeginTable("icon_customization", 6,
+        if (!ImGui.BeginTable("icon_customization", 7,
                 ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
             return;
 
         ImGui.TableSetupColumn("Type", ImGuiTableColumnFlags.WidthFixed, 140);
         ImGui.TableSetupColumn("Always Draw", ImGuiTableColumnFlags.WidthFixed, 80);
+        ImGui.TableSetupColumn("Show Name", ImGuiTableColumnFlags.WidthFixed, 75);
         ImGui.TableSetupColumn("Customize", ImGuiTableColumnFlags.WidthFixed, 70);
         ImGui.TableSetupColumn("Icon", ImGuiTableColumnFlags.WidthFixed, 40);
         ImGui.TableSetupColumn("Size", ImGuiTableColumnFlags.WidthFixed, 140);
@@ -320,20 +326,25 @@ public class IconCustomizationSettings
                 o.AlwaysDraw.Value = alwaysDraw;
 
             ImGui.TableSetColumnIndex(2);
+            var showName = o.ShowName.Value;
+            if (ImGui.Checkbox($"##name_{id}", ref showName))
+                o.ShowName.Value = showName;
+
+            ImGui.TableSetColumnIndex(3);
             var customize = o.Customize.Value;
             if (ImGui.Checkbox($"##cust_{id}", ref customize))
                 o.Customize.Value = customize;
 
-            ImGui.TableSetColumnIndex(3);
+            ImGui.TableSetColumnIndex(4);
             IconPicker(id, o);
 
-            ImGui.TableSetColumnIndex(4);
+            ImGui.TableSetColumnIndex(5);
             var size = o.Size.Value;
             ImGui.SetNextItemWidth(130);
             if (ImGui.SliderFloat($"##size_{id}", ref size, 1f, 60f))
                 o.Size.Value = size;
 
-            ImGui.TableSetColumnIndex(5);
+            ImGui.TableSetColumnIndex(6);
             var tint = o.Tint.Value.ToImguiVec4();
             if (ImGui.ColorEdit4($"##tint_{id}", ref tint,
                     ImGuiColorEditFlags.AlphaBar | ImGuiColorEditFlags.NoInputs))
